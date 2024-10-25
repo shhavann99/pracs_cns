@@ -1,0 +1,205 @@
+def toLowerCase(text):
+    return text.lower()
+
+def removeSpaces(text):
+    newText = ""
+    for i in text:
+        if i == " ":
+            continue
+        else:
+            newText = newText + i
+    return newText
+
+def Diagraph(text):
+    Diagraph = []
+    group = 0
+    for i in range(2, len(text), 2):
+        Diagraph.append(text[group:i])
+        group = i
+    Diagraph.append(text[group:])
+    return Diagraph
+
+def FillerLetter(text):
+    k = len(text)
+    if k % 2 == 0:
+        for i in range(0, k, 2):
+            if text[i] == text[i+1]:
+                new_word = text[0:i+1] + str('x') + text[i+1:]
+                new_word = FillerLetter(new_word)
+                break
+            else:
+                new_word = text
+    else:
+        for i in range(0, k-1, 2):
+            if text[i] == text[i+1]:
+                new_word = text[0:i+1] + str('x') + text[i+1:]
+                new_word = FillerLetter(new_word)
+                break
+            else:
+                new_word = text
+    return new_word
+
+list1 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+
+def generateKeyTable(word, list1):
+    key_letters = []
+    for i in word:
+        if i not in key_letters:
+            key_letters.append(i)
+
+    complements = []
+    for i in key_letters:
+        if i not in complements:
+            complements.append(i)
+    for i in list1:
+        if i not in complements:
+            complements.append(i)
+
+    matrix = []
+    while complements != []:
+        matrix.append(complements[:5])
+        complements = complements[5:]
+    return matrix
+
+def displayMatrix(matrix):
+    print("\n5x5 Key Matrix:")
+    for row in matrix:
+        print(" ".join(row))
+
+def search(mat, element):
+    for i in range(5):
+        for j in range(5):
+            if(mat[i][j] == element):
+                return i, j
+
+# Rules for encryption and decryption based on position in the matrix
+def encrypt_RowRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[e1r][0] if e1c == 4 else matr[e1r][e1c+1]
+    char2 = matr[e2r][0] if e2c == 4 else matr[e2r][e2c+1]
+    return char1, char2
+
+def encrypt_ColumnRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[0][e1c] if e1r == 4 else matr[e1r+1][e1c]
+    char2 = matr[0][e2c] if e2r == 4 else matr[e2r+1][e2c]
+    return char1, char2
+
+def encrypt_RectangleRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[e1r][e2c]
+    char2 = matr[e2r][e1c]
+    return char1, char2
+
+def decrypt_RowRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[e1r][4] if e1c == 0 else matr[e1r][e1c-1]
+    char2 = matr[e2r][4] if e2c == 0 else matr[e2r][e2c-1]
+    return char1, char2
+
+def decrypt_ColumnRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[4][e1c] if e1r == 0 else matr[e1r-1][e1c]
+    char2 = matr[4][e2c] if e2r == 0 else matr[e2r-1][e2c]
+    return char1, char2
+
+def decrypt_RectangleRule(matr, e1r, e1c, e2r, e2c):
+    char1 = matr[e1r][e2c]
+    char2 = matr[e2r][e1c]
+    return char1, char2
+
+def removeFillerLetters(text):
+    newText = ""
+    i = 0
+    while i < len(text):
+        # Ensure that i+2 is within bounds
+        if i < len(text) - 2 and text[i] == text[i+2] and text[i+1] == 'x':
+            # Skip 'x' between identical letters
+            newText += text[i]
+            i += 2  # Skip the next 'x'
+        else:
+            newText += text[i]
+        i += 1
+    return newText
+
+
+# Functions for encryption and decryption
+def encryptByPlayfairCipher(Matrix, plainList):
+    CipherText = []
+    for i in range(len(plainList)):
+        elem1_x, elem1_y = search(Matrix, plainList[i][0])
+        elem2_x, elem2_y = search(Matrix, plainList[i][1])
+
+        if elem1_x == elem2_x:
+            c1, c2 = encrypt_RowRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+        elif elem1_y == elem2_y:
+            c1, c2 = encrypt_ColumnRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+        else:
+            c1, c2 = encrypt_RectangleRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+
+        cipher = c1 + c2
+        CipherText.append(cipher)
+    return CipherText
+
+def decryptByPlayfairCipher(Matrix, cipherList):
+    PlainText = []
+    for i in range(len(cipherList)):
+        elem1_x, elem1_y = search(Matrix, cipherList[i][0])
+        elem2_x, elem2_y = search(Matrix, cipherList[i][1])
+
+        if elem1_x == elem2_x:
+            c1, c2 = decrypt_RowRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+        elif elem1_y == elem2_y:
+            c1, c2 = decrypt_ColumnRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+        else:
+            c1, c2 = decrypt_RectangleRule(Matrix, elem1_x, elem1_y, elem2_x, elem2_y)
+
+        plain = c1 + c2
+        PlainText.append(plain)
+    return PlainText
+
+# Taking user input for encryption or decryption
+operation = input("Do you want to encrypt or decrypt? (e/d): ").lower()
+
+# Taking input for plaintext or ciphertext and key
+if operation == 'e':
+    text_Plain = input("Enter the plaintext: ")
+    text_Plain = removeSpaces(toLowerCase(text_Plain))
+    PlainTextList = Diagraph(FillerLetter(text_Plain))
+    if len(PlainTextList[-1]) != 2:
+        PlainTextList[-1] = PlainTextList[-1]+'z'
+
+    key = input("Enter the key: ")
+    key = toLowerCase(key)
+    Matrix = generateKeyTable(key, list1)
+
+    # Displaying the key matrix
+    displayMatrix(Matrix)
+
+    # Encrypting the plaintext
+    print("Plain Text:", text_Plain)
+    CipherList = encryptByPlayfairCipher(Matrix, PlainTextList)
+
+    # Displaying the ciphertext
+    CipherText = "".join(CipherList)
+    print("CipherText:", CipherText)
+
+elif operation == 'd':
+    text_Cipher = input("Enter the ciphertext: ")
+    cipherList = Diagraph(text_Cipher)
+
+    key = input("Enter the key: ")
+    key = toLowerCase(key)
+    Matrix = generateKeyTable(key, list1)
+
+    # Displaying the key matrix
+    displayMatrix(Matrix)
+
+    # Decrypting the ciphertext
+    PlainTextList = decryptByPlayfairCipher(Matrix, cipherList)
+
+    # Reconstruct the decrypted text
+    PlainText = "".join(PlainTextList)
+
+    # Remove filler letters added during encryption (like 'x' between repeated letters)
+    finalDecryptedText = removeFillerLetters(PlainText)
+
+    # Displaying the final decrypted text
+    print("Decrypted Text:", finalDecryptedText)
+else:
+    print("Invalid operation selected.")
